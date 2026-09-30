@@ -38,6 +38,7 @@ export function CartProvider({ children }) {
       .filter((item) => item.quantity > 0)),
     removeItem: (id) => setItems((current) => current.filter((item) => String(item.id) !== String(id))),
     clear: () => setItems([]),
+    clearCart: () => setItems([]),
   }), [items]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

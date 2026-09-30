@@ -3,18 +3,22 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { formatPrice } from '../data/mockData';
 
 export default function ProductCard({ item, onAddToCart, onViewDetails }) {
+  const isPrescription = item.badge === 'Kê đơn';
+
   return (
     <View style={styles.productCard}>
-      <View style={styles.imageWrap}>
+      <TouchableOpacity style={styles.imageWrap} onPress={() => onViewDetails?.(item)}>
         {item.image ? (
           <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="cover" />
         ) : (
           <Text style={styles.imagePlaceholder}>💊</Text>
         )}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.badge}</Text>
+        <View style={[styles.badge, isPrescription ? styles.badgePrescription : styles.badgeOTC]}>
+          <Text style={[styles.badgeText, isPrescription ? styles.badgeTextPrescription : styles.badgeTextOTC]}>
+            {item.badge}
+          </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       <Text style={styles.productCategory}>{item.category}</Text>
       <TouchableOpacity onPress={() => onViewDetails?.(item)}>
@@ -23,7 +27,7 @@ export default function ProductCard({ item, onAddToCart, onViewDetails }) {
       <Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
 
       <TouchableOpacity style={styles.buyButton} onPress={() => onAddToCart?.(item)}>
-        <Text style={styles.buyButtonText}>Mua ngay</Text>
+        <Text style={styles.buyButtonText}>+ Thêm vào giỏ</Text>
       </TouchableOpacity>
     </View>
   );
@@ -32,20 +36,20 @@ export default function ProductCard({ item, onAddToCart, onViewDetails }) {
 const styles = StyleSheet.create({
   productCard: {
     backgroundColor: '#fff',
-    borderRadius: 18,
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e8edf6',
+    borderColor: '#e2e8f0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   imageWrap: {
     position: 'relative',
-    height: 180,
-    backgroundColor: '#ebf2ff',
+    height: 160,
+    backgroundColor: '#f8fafc',
   },
   productImage: {
     width: '100%',
@@ -55,57 +59,57 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     textAlignVertical: 'center',
-    fontSize: 48,
+    fontSize: 44,
   },
   badge: {
     position: 'absolute',
-    left: 10,
-    top: 10,
-    backgroundColor: '#e4f8f2',
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    left: 8,
+    top: 8,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
-  badgeText: {
-    color: '#0f766e',
-    fontSize: 10,
-    fontWeight: '700',
-  },
+  badgeOTC: { backgroundColor: '#dcfce7' },
+  badgePrescription: { backgroundColor: '#fee2e2' },
+  badgeText: { fontSize: 10, fontWeight: '800' },
+  badgeTextOTC: { color: '#15803d' },
+  badgeTextPrescription: { color: '#b91c1c' },
   productCategory: {
     paddingHorizontal: 12,
-    marginTop: 12,
-    color: '#2cb67d',
+    marginTop: 10,
+    color: '#0d9488',
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   productName: {
     paddingHorizontal: 12,
-    marginTop: 4,
+    marginTop: 3,
     color: '#0f172a',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    lineHeight: 20,
+    lineHeight: 18,
+    minHeight: 36,
   },
   productPrice: {
     paddingHorizontal: 12,
-    marginTop: 8,
-    color: '#1d9bf0',
-    fontSize: 18,
+    marginTop: 6,
+    color: '#0d9488',
+    fontSize: 16,
     fontWeight: '800',
   },
   buyButton: {
-    marginHorizontal: 12,
-    marginTop: 12,
-    marginBottom: 12,
-    borderRadius: 12,
-    backgroundColor: '#1d9bf0',
-    paddingVertical: 10,
+    marginHorizontal: 10,
+    marginTop: 10,
+    marginBottom: 10,
+    borderRadius: 10,
+    backgroundColor: '#0d9488',
+    paddingVertical: 9,
     alignItems: 'center',
   },
   buyButtonText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
   },
 });

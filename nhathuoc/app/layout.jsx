@@ -2,8 +2,12 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata = {
-  title: "Nhà Thuốc Admin — Hệ thống quản lý nhà thuốc",
-  description: "Giao diện quản trị hệ thống nhà thuốc: thuốc, đơn hàng, nhập kho, bác sĩ, khách hàng.",
+  title: "Nhà Thuốc Trực Tuyến",
+  description: "Hệ thống ứng dụng di động Expo và web quản lý nhà thuốc trực tuyến: bán thuốc, kê đơn, đơn hàng, hóa đơn, nhập kho và quản trị.",
+  openGraph: {
+    title: "Nhà Thuốc Trực Tuyến",
+    description: "Hệ thống ứng dụng di động Expo và web quản lý nhà thuốc trực tuyến: bán thuốc, kê đơn, đơn hàng, hóa đơn, nhập kho và quản trị.",
+  },
 };
 
 export default function RootLayout({ children }) {

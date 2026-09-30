@@ -15,10 +15,10 @@ export default function StoreHeader({ cartCount = 0, onCartPress, onAccountPress
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.iconButton} onPress={onAccountPress}>
+        <TouchableOpacity style={styles.iconButton} onPress={onAccountPress} aria-label="Tài khoản">
           <Text style={styles.cartText}>👤</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cartButton} onPress={onCartPress}>
+        <TouchableOpacity style={styles.cartButton} onPress={onCartPress} aria-label="Giỏ hàng">
           <Text style={styles.cartText}>🛒</Text>
           {cartCount > 0 && <Text style={styles.cartCount}>{cartCount}</Text>}
         </TouchableOpacity>
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingHorizontal: 18,
+    paddingTop: 16,
     paddingBottom: 8,
   },
   brandWrap: {
@@ -41,55 +41,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoBox: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: '#1d9bf0',
+    backgroundColor: '#0d9488',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   logoText: {
     color: '#fff',
-    fontWeight: '700',
-    fontSize: 18,
+    fontWeight: '800',
+    fontSize: 17,
   },
   brandTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: '800',
+    color: '#134e4a',
   },
   brandSub: {
     fontSize: 12,
-    color: '#2cb67d',
-    fontWeight: '600',
+    color: '#0d9488',
+    fontWeight: '700',
   },
   cartButton: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#dfeaf7',
+    borderColor: '#cbd5e1',
   },
   actions: {
     flexDirection: 'row',
     gap: 8,
   },
   iconButton: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#dfeaf7',
+    borderColor: '#cbd5e1',
   },
   cartText: {
-    fontSize: 20,
+    fontSize: 18,
   },
   cartCount: {
     position: 'absolute',
@@ -98,11 +98,11 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#ef476f',
+    backgroundColor: '#e11d48',
     color: '#fff',
     textAlign: 'center',
     fontSize: 11,
     fontWeight: '800',
-    paddingTop: 2,
+    paddingTop: 1,
   },
 });

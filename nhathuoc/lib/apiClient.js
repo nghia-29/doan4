@@ -2,7 +2,8 @@ import axios from "axios";
 
 // Địa chỉ backend Express (be/app.js). Đổi trong .env.local nếu backend chạy nơi khác.
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== "undefined" ? "/api" : "http://localhost:3000/api");
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

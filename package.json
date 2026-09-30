@@ -1,0 +1,15 @@
+{
+  "name": "nhathuoc-applet",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "nhathuoc",
+    "be"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=nhathuoc",
+    "build": "npm run build --workspace=nhathuoc",
+    "start": "npm run start --workspace=nhathuoc",
+    "lint": "npm run lint --workspace=nhathuoc"
+  }
+}
