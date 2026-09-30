@@ -1,0 +1,33 @@
+const express = require('express');
+const cors = require('cors');
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.use('/api/anh_thuoc', require('./router/anh_thuocRouter'));
+app.use('/api/bac_si', require('./router/bac_siRouter'));
+app.use('/api/chi_tiet_don_dat', require('./router/chi_tiet_don_datRouter'));
+app.use('/api/chi_tiet_don_thuoc', require('./router/chi_tiet_don_thuocRouter'));
+app.use('/api/chi_tiet_phieu_nhap', require('./router/chi_tiet_phieu_nhapRouter'));
+app.use('/api/danh_gia', require('./router/danh_giaRouter'));
+app.use('/api/danh_muc_thuoc', require('./router/danh_muc_thuocRouter'));
+app.use('/api/don_dat_thuoc', require('./router/don_dat_thuocRouter'));
+app.use('/api/don_thuoc', require('./router/don_thuocRouter'));
+app.use('/api/gio_hang', require('./router/gio_hangRouter'));
+app.use('/api/hoa_don', require('./router/hoa_donRouter'));
+app.use('/api/khach_hang', require('./router/khach_hangRouter'));
+app.use('/api/khuyen_mai', require('./router/khuyen_maiRouter'));
+app.use('/api/lich_su_theo_doi_don', require('./router/lich_su_theo_doi_donRouter'));
+app.use('/api/lich_su_trang_thai_nhap', require('./router/lich_su_trang_thai_nhapRouter'));
+app.use('/api/mo_ta_thuoc', require('./router/mo_ta_thuocRouter'));
+app.use('/api/nha_cung_cap', require('./router/nha_cung_capRouter'));
+app.use('/api/nhan_vien', require('./router/nhan_vienRouter'));
+app.use('/api/phieu_nhap_thuoc', require('./router/phieu_nhap_thuocRouter'));
+app.use('/api/tai_khoan', require('./router/tai_khoanRouter'));
+app.use('/api/thanh_toan', require('./router/thanh_toanRouter'));
+app.use('/api/thuoc', require('./router/thuocRouter'));
+app.use('/api/v_thuoc_ke_don', require('./router/v_thuoc_ke_donRouter'));
+app.use('/api/v_thuoc_sap_het_han', require('./router/v_thuoc_sap_het_hanRouter'));
+app.use('/api/vai_tro', require('./router/vai_troRouter'));
+
+app.listen(3000, () => console.log('Server running on port 3000'));
