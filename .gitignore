@@ -1,3 +1,6 @@
 node_modules/
 **/node_modules/
 .env
+be/uploads/
+nhathuoc-expo/.expo/
+nhathuoc-expo/dist/

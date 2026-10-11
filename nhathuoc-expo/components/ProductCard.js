@@ -1,15 +1,17 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { formatPrice } from '../data/mockData';
+import { resolveAssetUrl } from '../services/apiClient';
 
 export default function ProductCard({ item, onAddToCart, onViewDetails }) {
   const isPrescription = item.badge === 'Kê đơn';
+  const outOfStock = typeof item.stock === 'number' && item.stock <= 0;
 
   return (
     <View style={styles.productCard}>
       <TouchableOpacity style={styles.imageWrap} onPress={() => onViewDetails?.(item)}>
         {item.image ? (
-          <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="cover" />
+          <Image source={{ uri: resolveAssetUrl(item.image) }} style={styles.productImage} resizeMode="cover" />
         ) : (
           <Text style={styles.imagePlaceholder}>💊</Text>
         )}
@@ -24,10 +26,24 @@ export default function ProductCard({ item, onAddToCart, onViewDetails }) {
       <TouchableOpacity onPress={() => onViewDetails?.(item)}>
         <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
       </TouchableOpacity>
-      <Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
 
-      <TouchableOpacity style={styles.buyButton} onPress={() => onAddToCart?.(item)}>
-        <Text style={styles.buyButtonText}>+ Thêm vào giỏ</Text>
+      <View style={styles.metaRow}>
+        <Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
+        {typeof item.stock === 'number' && (
+          <Text style={[styles.stockText, item.stock > 0 ? styles.stockAvailable : styles.stockEmpty]}>
+            {item.stock > 0 ? `Còn ${item.stock}` : 'Hết hàng'}
+          </Text>
+        )}
+      </View>
+
+      <TouchableOpacity
+        style={[styles.buyButton, outOfStock && styles.buyButtonDisabled]}
+        onPress={() => onAddToCart?.(item)}
+        disabled={outOfStock}
+      >
+        <Text style={styles.buyButtonText}>
+          {outOfStock ? 'Tạm hết hàng' : '+ Thêm vào giỏ'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -91,12 +107,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     minHeight: 36,
   },
-  productPrice: {
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 12,
     marginTop: 6,
+  },
+  productPrice: {
     color: '#0d9488',
     fontSize: 16,
     fontWeight: '800',
+  },
+  stockText: {
+    fontSize: 10,
+    fontWeight: '700',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  stockAvailable: {
+    backgroundColor: '#ecfdf5',
+    color: '#15803d',
+  },
+  stockEmpty: {
+    backgroundColor: '#fef2f2',
+    color: '#b91c1c',
   },
   buyButton: {
     marginHorizontal: 10,
@@ -107,6 +143,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     alignItems: 'center',
   },
+  buyButtonDisabled: { backgroundColor: '#94a3b8' },
   buyButtonText: {
     color: '#fff',
     fontWeight: '700',

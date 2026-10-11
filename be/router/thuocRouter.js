@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/thuocController');
+const { uploadMedicineImage } = require('../middleware/imageUpload');
+router.post('/images', uploadMedicineImage, ctrl.uploadImage);
 router.get('/', ctrl.getAll);
 router.get('/:id', ctrl.getById);
 router.post('/', ctrl.create);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,11 +15,17 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { createCrudService } from '../services/crudService';
 import { formatPrice } from '../data/mockData';
+import { isPromotionActive } from '../utils/promotions';
 
-export default function CartScreen({ navigation }) {
+export default function CartScreen({ navigation, route }) {
   const { items, count, total, increaseItem, decreaseItem, removeItem, clearCart } =
     useCart();
   const { user } = useAuth();
+  const [customer, setCustomer] = useState(null);
+  const [medicines, setMedicines] = useState([]);
+  const [prescriptionBalances, setPrescriptionBalances] = useState([]);
+  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
+  const [checkoutError, setCheckoutError] = useState('');
 
   // Coupon voucher state
   const [couponCode, setCouponCode] = useState('');
@@ -27,16 +33,95 @@ export default function CartScreen({ navigation }) {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
 
-  // Shipping & recipient info
-  const [customerName, setCustomerName] = useState('Nguyễn Văn Khách');
-  const [phone, setPhone] = useState('0901234567');
-  const [address, setAddress] = useState('123 Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM');
+  useEffect(() => {
+    if (route.params?.couponCode) {
+      setCouponCode(String(route.params.couponCode));
+    }
+  }, [route.params?.couponCode]);
+
+  // Delivery information is prefilled from the signed-in customer's profile.
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('tien_mat'); // 'tien_mat' | 'chuyen_khoan' | 'vi_dien_tu'
+  const [paymentMethod, setPaymentMethod] = useState('COD');
 
   // Submitting state & Success modal
   const [submitting, setSubmitting] = useState(false);
   const [successOrder, setSuccessOrder] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadCheckoutData = async () => {
+      try {
+        const [customerList, medicineList, balances] = await Promise.all([
+          createCrudService('khach_hang').getAll(),
+          createCrudService('thuoc').getAll(),
+          user?.id
+            ? createCrudService('v_toa_con_lai').getAll()
+            : Promise.resolve([]),
+        ]);
+        if (!mounted) return;
+
+        const profile = customerList.find(
+          (item) => String(item.id_tai_khoan) === String(user?.id)
+        );
+        setCustomer(profile || null);
+        setMedicines(medicineList);
+        setPrescriptionBalances(
+          balances.filter((item) => String(item.id_khach_hang) === String(profile?.id))
+        );
+        if (profile) {
+          setPhone(profile.so_dien_thoai || '');
+          setAddress(profile.dia_chi || '');
+        }
+        setCheckoutError('');
+      } catch (error) {
+        if (mounted) setCheckoutError(error.message || 'Không thể tải thông tin đặt hàng.');
+      }
+    };
+
+    loadCheckoutData();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
+
+  const medicineById = useMemo(
+    () => Object.fromEntries(medicines.map((medicine) => [String(medicine.id), medicine])),
+    [medicines]
+  );
+  const prescriptionItems = useMemo(
+    () => items.filter((item) =>
+      item.loai_ke_don === 'ke_don' ||
+      medicineById[String(item.id)]?.loai_ke_don === 'ke_don' ||
+      item.badge === 'Kê đơn'
+    ),
+    [items, medicineById]
+  );
+  const today = new Date().toISOString().slice(0, 10);
+  const prescriptionOptions = useMemo(() => [...new Set(
+    prescriptionBalances
+      .filter((row) =>
+        row.trang_thai_toa === 'da_duyet' &&
+        String(row.han_dung_toa || '').slice(0, 10) >= today &&
+        Number(row.con_lai) > 0
+      )
+      .map((row) => String(row.id_don_thuoc))
+  )]
+    .map((id) => ({
+      id,
+      rows: prescriptionBalances.filter((row) => String(row.id_don_thuoc) === id),
+    }))
+    .filter(({ rows }) => prescriptionItems.every((item) => {
+      const balance = rows.find((row) => String(row.id_thuoc) === String(item.id));
+      return balance && Number(balance.con_lai) >= Number(item.quantity);
+    })), [prescriptionBalances, prescriptionItems, today]);
+
+  useEffect(() => {
+    if (!prescriptionOptions.some((option) => option.id === String(selectedPrescriptionId))) {
+      setSelectedPrescriptionId(null);
+    }
+  }, [prescriptionOptions, selectedPrescriptionId]);
 
   const applyCoupon = async () => {
     setCouponError('');
@@ -44,7 +129,10 @@ export default function CartScreen({ navigation }) {
     try {
       const coupons = await createCrudService('khuyen_mai').getAll();
       const codeUpper = couponCode.trim().toUpperCase();
-      const found = coupons.find((c) => String(c.ma_code).toUpperCase() === codeUpper);
+      const found = coupons.find((coupon) => {
+        return String(coupon.ma_code).toUpperCase() === codeUpper &&
+          isPromotionActive(coupon);
+      });
 
       if (!found) {
         setCouponError('Mã khuyến mãi không tồn tại hoặc đã hết hạn.');
@@ -67,9 +155,9 @@ export default function CartScreen({ navigation }) {
         discount = Number(found.gia_tri_giam);
       }
 
-      setDiscountAmount(discount);
+      setDiscountAmount(Math.min(total, Math.max(0, discount)));
       setAppliedCoupon(found);
-      Alert.alert('Thành công', `Đã áp dụng mã ${found.ma_code}: Giảm ${formatPrice(discount)}!`);
+      Alert.alert('Thành công', `Đã áp dụng mã ${found.ma_code}: Giảm ${formatPrice(Math.min(total, Math.max(0, discount)))}!`);
     } catch (e) {
       setCouponError('Không thể kiểm tra mã khuyến mãi.');
     }
@@ -78,36 +166,51 @@ export default function CartScreen({ navigation }) {
   const finalTotal = Math.max(0, total - discountAmount);
 
   const placeOrder = async () => {
-    if (!customerName.trim() || !phone.trim() || !address.trim()) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng nhập đầy đủ Tên, Số điện thoại và Địa chỉ nhận hàng.');
+    if (!user || !customer) {
+      Alert.alert('Cần đăng nhập', 'Vui lòng đăng nhập bằng tài khoản khách hàng để đặt thuốc.');
+      navigation.navigate('Login');
+      return;
+    }
+    if (checkoutError) {
+      Alert.alert('Chưa thể đặt hàng', checkoutError);
+      return;
+    }
+    if (prescriptionItems.length && !selectedPrescriptionId) {
+      Alert.alert('Cần chọn toa thuốc', 'Chọn toa đã được dược sĩ duyệt và còn đủ số lượng cho các thuốc kê đơn.');
+      return;
+    }
+    if (items.some((item) => Number(item.stock ?? medicineById[String(item.id)]?.so_luong_ton ?? 0) < item.quantity)) {
+      Alert.alert('Không đủ tồn kho', 'Vui lòng giảm số lượng thuốc đã hết hoặc không đủ hàng.');
+      return;
+    }
+    if (!phone.trim() || !address.trim()) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng nhập số điện thoại và địa chỉ nhận hàng.');
       return;
     }
 
     setSubmitting(true);
+    let orderId = null;
     try {
       const donDatService = createCrudService('don_dat_thuoc');
       const chiTietService = createCrudService('chi_tiet_don_dat');
       const historyService = createCrudService('lich_su_theo_doi_don');
       const thanhToanService = createCrudService('thanh_toan');
-      const hoaDonService = createCrudService('hoa_don');
-
       const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
       // 1. Create order
       const newOrder = await donDatService.create({
-        id_khach_hang: user?.id || 1,
-        id_don_thuoc: null,
+        id_khach_hang: customer.id,
+        id_don_thuoc: selectedPrescriptionId || null,
         id_khuyen_mai: appliedCoupon?.id || null,
         tong_tien: total,
         giam_gia: discountAmount,
         thanh_tien: finalTotal,
         dia_chi_giao_hang: address.trim(),
         so_dien_thoai_nhan: phone.trim(),
-        trang_thai: 'cho_xac_nhan',
-        ngay_dat: nowStr,
       });
 
-      const orderId = newOrder.id;
+      orderId = newOrder.id;
+      if (!orderId) throw new Error('Máy chủ không trả về mã đơn hàng.');
 
       // 2. Save line items
       for (const item of items) {
@@ -115,8 +218,7 @@ export default function CartScreen({ navigation }) {
           id_don_dat: orderId,
           id_thuoc: item.id,
           so_luong: item.quantity,
-          don_gia: item.price,
-        }).catch(() => {});
+        });
       }
 
       // 3. Create status history log
@@ -125,33 +227,26 @@ export default function CartScreen({ navigation }) {
         trang_thai_cap_nhat: 'cho_xac_nhan',
         ghi_chu: note.trim() || 'Khách hàng vừa đặt đơn mới từ ứng dụng di động',
         thoi_gian_cap_nhat: nowStr,
-      }).catch(() => {});
+      });
 
       // 4. Create payment transaction
       await thanhToanService.create({
         id_don_dat: orderId,
         phuong_thuc: paymentMethod,
-        ma_giao_dich: `${paymentMethod.toUpperCase()}${Date.now().toString().slice(-6)}`,
+        ma_giao_dich: null,
         so_tien: finalTotal,
-        trang_thai: paymentMethod === 'tien_mat' ? 'cho_thanh_toan' : 'da_thanh_toan',
-        thoi_gian_thanh_toan: paymentMethod === 'tien_mat' ? null : nowStr,
-      }).catch(() => {});
+        trang_thai: 'cho_thanh_toan',
+        thoi_gian_thanh_toan: null,
+      });
 
-      // 5. Create invoice
-      await hoaDonService.create({
-        id_don_dat: orderId,
-        so_hoa_don: `HD${Date.now().toString().slice(-8)}`,
-        tong_tien_truoc_thue: finalTotal,
-        thue_vat: 0,
-        tong_tien_sau_thue: finalTotal,
-        ngay_lap: nowStr,
-      }).catch(() => {});
-
-      // 6. Clear cart & open success modal
+      // 5. Clear cart & open success modal
       if (clearCart) clearCart();
       setSuccessOrder({ id: orderId, finalTotal });
     } catch (e) {
-      Alert.alert('Không thể đặt hàng', e.message || 'Lỗi xử lý đơn hàng.');
+      const message = orderId
+        ? `Đơn #${orderId} đã được tạo nhưng chưa hoàn tất đầy đủ. Vui lòng tải lại danh sách đơn hoặc liên hệ nhà thuốc. ${e.message || ''}`
+        : e.message || 'Lỗi xử lý đơn hàng.';
+      Alert.alert('Không thể hoàn tất đặt hàng', message);
     } finally {
       setSubmitting(false);
     }
@@ -215,8 +310,15 @@ export default function CartScreen({ navigation }) {
                     </TouchableOpacity>
                     <Text style={styles.qtyVal}>{item.quantity}</Text>
                     <TouchableOpacity
-                      style={styles.qtyBtn}
+                      style={[
+                        styles.qtyBtn,
+                        Number(item.stock ?? medicineById[String(item.id)]?.so_luong_ton ?? 0) <= item.quantity &&
+                          styles.qtyBtnDisabled,
+                      ]}
                       onPress={() => increaseItem(item.id)}
+                      disabled={
+                        Number(item.stock ?? medicineById[String(item.id)]?.so_luong_ton ?? 0) <= item.quantity
+                      }
                     >
                       <Text style={styles.qtyBtnText}>+</Text>
                     </TouchableOpacity>
@@ -231,6 +333,56 @@ export default function CartScreen({ navigation }) {
                 </View>
               ))}
             </View>
+
+            {prescriptionItems.length > 0 && (
+              <View style={styles.prescriptionCard}>
+                <Text style={styles.cardHeader}>Toa thuốc kê đơn</Text>
+                <Text style={styles.prescriptionHint}>
+                  {prescriptionOptions.length
+                    ? 'Chỉ dùng toa đã được dược sĩ duyệt, còn hiệu lực và đủ số lượng.'
+                    : 'Chưa có toa hợp lệ còn đủ số lượng. Bạn có thể tiếp tục mua thuốc không kê đơn.'}
+                </Text>
+                {prescriptionOptions.map((option) => {
+                  const selected = String(selectedPrescriptionId) === option.id;
+                  return (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={[styles.prescriptionOption, selected && styles.prescriptionOptionActive]}
+                      onPress={() => setSelectedPrescriptionId(selected ? null : option.id)}
+                    >
+                      <View style={[styles.radio, selected && styles.radioActive]}>
+                        {selected ? <View style={styles.radioDot} /> : null}
+                      </View>
+                      <View style={styles.prescriptionOptionInfo}>
+                        <Text style={styles.prescriptionOptionTitle}>Toa #{option.id}</Text>
+                        {option.rows.map((row) => (
+                          <Text key={row.id_thuoc} style={styles.prescriptionOptionMeta}>
+                            {row.ten_thuoc}: còn {row.con_lai}
+                          </Text>
+                        ))}
+                        <Text style={styles.prescriptionOptionMeta}>
+                          Hiệu lực đến {String(option.rows[0]?.han_dung_toa || '').slice(0, 10)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {!user || !customer ? (
+              <View style={styles.accountNotice}>
+                <Text style={styles.accountNoticeTitle}>Đăng nhập để hoàn tất đơn hàng</Text>
+                <Text style={styles.accountNoticeText}>
+                  Đơn hàng sẽ được liên kết với hồ sơ khách hàng và toa thuốc của bạn.
+                </Text>
+                <TouchableOpacity style={styles.accountNoticeButton} onPress={() => navigation.navigate('Login')}>
+                  <Text style={styles.accountNoticeButtonText}>Đăng nhập tài khoản</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {checkoutError ? <Text style={styles.checkoutError}>{checkoutError}</Text> : null}
 
             {/* Voucher Section */}
             <View style={styles.couponCard}>
@@ -259,15 +411,6 @@ export default function CartScreen({ navigation }) {
             {/* Delivery Information */}
             <View style={styles.formCard}>
               <Text style={styles.cardHeader}>Thông tin giao hàng</Text>
-              <Text style={styles.inputLabel}>Họ và tên người nhận *</Text>
-              <TextInput
-                value={customerName}
-                onChangeText={setCustomerName}
-                placeholder="Nguyễn Văn A"
-                placeholderTextColor="#94a3b8"
-                style={styles.formInput}
-              />
-
               <Text style={styles.inputLabel}>Số điện thoại nhận hàng *</Text>
               <TextInput
                 value={phone}
@@ -304,12 +447,12 @@ export default function CartScreen({ navigation }) {
               <TouchableOpacity
                 style={[
                   styles.paymentOption,
-                  paymentMethod === 'tien_mat' && styles.paymentOptionActive,
+                  paymentMethod === 'COD' && styles.paymentOptionActive,
                 ]}
-                onPress={() => setPaymentMethod('tien_mat')}
+                onPress={() => setPaymentMethod('COD')}
               >
                 <Text style={styles.paymentRadio}>
-                  {paymentMethod === 'tien_mat' ? '🔘' : '⚪'}
+                  {paymentMethod === 'COD' ? '🔘' : '⚪'}
                 </Text>
                 <View>
                   <Text style={styles.paymentTitle}>Thanh toán tiền mặt khi nhận hàng (COD)</Text>
@@ -329,7 +472,7 @@ export default function CartScreen({ navigation }) {
                 </Text>
                 <View>
                   <Text style={styles.paymentTitle}>Chuyển khoản ngân hàng (VietQR)</Text>
-                  <Text style={styles.paymentSub}>Quét mã QR tự động xác nhận</Text>
+                  <Text style={styles.paymentSub}>Thanh toán ngoài ứng dụng, trạng thái chờ xác nhận</Text>
                 </View>
               </TouchableOpacity>
 
@@ -345,7 +488,7 @@ export default function CartScreen({ navigation }) {
                 </Text>
                 <View>
                   <Text style={styles.paymentTitle}>Ví điện tử MoMo / ZaloPay</Text>
-                  <Text style={styles.paymentSub}>Thanh toán an toàn, bảo mật</Text>
+                  <Text style={styles.paymentSub}>Thanh toán ngoài ứng dụng, trạng thái chờ xác nhận</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -457,6 +600,61 @@ const styles = StyleSheet.create({
   },
   browseBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   itemsSection: { marginBottom: 14 },
+  prescriptionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#c7d2fe',
+    marginBottom: 14,
+  },
+  prescriptionHint: { color: '#64748b', fontSize: 12, lineHeight: 18, marginBottom: 10 },
+  prescriptionOption: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 11,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginTop: 8,
+  },
+  prescriptionOptionActive: { borderColor: '#4f46e5', backgroundColor: '#eef2ff' },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: '#94a3b8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginTop: 1,
+  },
+  radioActive: { borderColor: '#4f46e5' },
+  radioDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#4f46e5' },
+  prescriptionOptionInfo: { flex: 1 },
+  prescriptionOptionTitle: { color: '#1e1b4b', fontSize: 13, fontWeight: '800' },
+  prescriptionOptionMeta: { color: '#64748b', fontSize: 11, marginTop: 3 },
+  accountNotice: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    marginBottom: 14,
+  },
+  accountNoticeTitle: { color: '#1e3a8a', fontSize: 14, fontWeight: '800' },
+  accountNoticeText: { color: '#475569', fontSize: 12, lineHeight: 18, marginTop: 4 },
+  accountNoticeButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#2563eb',
+    borderRadius: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    marginTop: 10,
+  },
+  accountNoticeButtonText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  checkoutError: { color: '#b91c1c', fontSize: 12, marginBottom: 12 },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -490,6 +688,7 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   qtyBtn: { paddingHorizontal: 10, paddingVertical: 6 },
+  qtyBtnDisabled: { opacity: 0.4 },
   qtyBtnText: { color: '#0d9488', fontSize: 16, fontWeight: '800' },
   qtyVal: { color: '#0f172a', fontWeight: '700', fontSize: 13, minWidth: 20, textAlign: 'center' },
   removeBtn: { padding: 8, marginLeft: 6 },

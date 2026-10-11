@@ -1,3 +1,3 @@
-import { getList } from './apiClient';
+import { createCrudService } from './crudService';
 
-export default { getAll: () => getList('/tai_khoan') };
+export default createCrudService('tai_khoan');

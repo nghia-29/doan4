@@ -36,8 +36,13 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   categoryChipActive: {
-    backgroundColor: '#1d9bf0',
-    borderColor: '#1d9bf0',
+    backgroundColor: '#0d9488',
+    borderColor: '#0d9488',
+    shadowColor: '#0d9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   categoryText: {
     color: '#334155',

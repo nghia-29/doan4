@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "nhathuoc",
+    "nhathuoc-expo",
     "be"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=nhathuoc",
-    "build": "npm run build --workspace=nhathuoc",
-    "start": "npm run start --workspace=nhathuoc",
-    "lint": "npm run lint --workspace=nhathuoc"
+    "dev": "npm run start --workspace=nhathuoc-expo",
+    "build": "npm run build --workspace=nhathuoc-expo",
+    "start": "npm run start --workspace=nhathuoc-expo",
+    "lint": "npm run lint --workspace=nhathuoc-expo",
+    "dev:be": "node be/app.js"
   }
 }

@@ -15,6 +15,7 @@ import thuocService from '../services/thuocService';
 import anhThuocService from '../services/anhThuocService';
 import moTaThuocService from '../services/moTaThuocService';
 import danhGiaService from '../services/danhGiaService';
+import { resolveAssetUrl } from '../services/apiClient';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../data/mockData';
@@ -63,6 +64,10 @@ export default function ProductDetailScreen({ route, navigation }) {
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (Number(product.so_luong_ton) < quantity) {
+      Alert.alert('Không đủ hàng', `Hiện chỉ còn ${Number(product.so_luong_ton) || 0} ${product.don_vi_tinh || 'sản phẩm'}.`);
+      return;
+    }
     for (let i = 0; i < quantity; i++) {
       addItem({
         id: product.id,
@@ -70,6 +75,9 @@ export default function ProductDetailScreen({ route, navigation }) {
         price: Number(product.gia_ban) || 0,
         unit: product.don_vi_tinh,
         image: image?.duong_dan_anh,
+        stock: Number(product.so_luong_ton) || 0,
+        loai_ke_don: product.loai_ke_don || 'khong_ke_don',
+        badge: isPrescription ? 'Kê đơn' : 'Không kê đơn',
       });
     }
     Alert.alert(
@@ -133,7 +141,7 @@ export default function ProductDetailScreen({ route, navigation }) {
             <View style={styles.imageBox}>
               {image?.duong_dan_anh ? (
                 <Image
-                  source={{ uri: image.duong_dan_anh }}
+                  source={{ uri: resolveAssetUrl(image.duong_dan_anh) }}
                   style={styles.image}
                   resizeMode="cover"
                 />
@@ -199,7 +207,12 @@ export default function ProductDetailScreen({ route, navigation }) {
                   <Text style={styles.qtyValue}>{quantity}</Text>
                   <TouchableOpacity
                     style={styles.qtyBtn}
-                    onPress={() => setQuantity((q) => q + 1)}
+                    onPress={() =>
+                      setQuantity((q) =>
+                        Math.min(Number(product.so_luong_ton) || 1, q + 1)
+                      )
+                    }
+                    disabled={quantity >= Number(product.so_luong_ton)}
                   >
                     <Text style={styles.qtyBtnText}>+</Text>
                   </TouchableOpacity>

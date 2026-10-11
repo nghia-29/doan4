@@ -7,19 +7,28 @@
     "@react-navigation/native": "^7.4.1",
     "@react-navigation/native-stack": "^7.19.2",
     "expo": "~57.0.25",
+    "expo-image-picker": "~57.0.20",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-safe-area-context": "^5.10.0",
     "react-native-screens": "^4.28.0",
+    "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2"
   },
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start": "cross-env CI=1 expo start --port 8083",
+    "android": "cross-env CI=1 expo start --android --port 8083",
+    "ios": "cross-env CI=1 expo start --ios --port 8083",
+    "web": "cross-env CI=1 expo start --web --port 8083",
+    "build": "cross-env CI=1 expo export --platform web",
+    "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2"
+  }
 }

@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Expo web",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"nhathuoc-expo",
+				"run",
+				"web",
+				"--",
+				"--host",
+				"localhost"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

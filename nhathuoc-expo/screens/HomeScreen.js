@@ -14,9 +14,11 @@ import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import ServiceCard from '../components/ServiceCard';
 import StoreHeader from '../components/StoreHeader';
+import InfoScreen from './InfoScreen';
 import { services } from '../data/mockData';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { isAdminRole, isStaffRole } from '../utils/workspaceAccess';
 import thuocService from '../services/thuocService';
 import danhMucThuocService from '../services/danhMucThuocService';
 import anhThuocService from '../services/anhThuocService';
@@ -35,6 +37,7 @@ function normalizeProduct(product, categoryMap, imageList) {
     category: categoryName,
     image: image?.duong_dan_anh || null,
     badge: product.loai_ke_don === 'ke_don' ? 'Kê đơn' : 'Không kê đơn',
+    loai_ke_don: product.loai_ke_don || 'khong_ke_don',
     active: Number(product.trang_thai ?? 1) === 1,
   };
 }
@@ -52,6 +55,7 @@ export default function HomeScreen({ navigation }) {
   const [maxPrice, setMaxPrice] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAbout, setShowAbout] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -97,9 +101,18 @@ export default function HomeScreen({ navigation }) {
 
   const priceCeiling = Math.max(...products.map((item) => item.price), 100000);
 
-  const role = String(user?.vai_tro || '').toLowerCase();
-  const isAdmin = role.includes('admin');
-  const isStaff = ['duoc_si', 'nv_quan_ly', 'nhan_vien'].some((r) => role.includes(r));
+  const isAdmin = isAdminRole(user?.vai_tro);
+  const isStaff = isStaffRole(user?.vai_tro);
+
+  if (showAbout) {
+    return (
+      <InfoScreen
+        route={{ params: { type: 'about' } }}
+        navigation={navigation}
+        onClose={() => setShowAbout(false)}
+      />
+    );
+  }
 
   return (
     <ScrollView
@@ -136,17 +149,18 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.portalBtnText}>🩺 Dược sĩ</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              style={styles.portalBtn}
-              onPress={() => navigation.navigate('Customer')}
-            >
-              <Text style={styles.portalBtnText}>📦 Đơn của tôi</Text>
-            </TouchableOpacity>
+            {!isAdmin && !isStaff && (
+              <TouchableOpacity
+                style={styles.portalBtn}
+                onPress={() => navigation.navigate('Customer')}
+              >
+                <Text style={styles.portalBtnText}>📦 Đơn của tôi</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       )}
 
-      {/* Search Input */}
       <View style={styles.searchWrap}>
         <TextInput
           value={query}
@@ -157,8 +171,34 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
-      {/* Hero Banner */}
+      <View style={styles.quickActions}>
+        {[
+          { label: 'Thuốc', icon: '💊', route: 'Products' },
+          { label: 'Kê đơn', icon: '🩺', route: 'Products' },
+          { label: 'Khuyến mãi', icon: '🎁', route: 'Promotions' },
+          { label: 'Liên hệ', icon: '☎️', route: 'Contact' },
+          { label: 'Giới thiệu', icon: '🏥', route: 'About' },
+        ].map((action) => (
+          <TouchableOpacity
+            key={action.label}
+            style={styles.quickAction}
+            onPress={() => action.route === 'About'
+              ? setShowAbout(true)
+              : navigation.navigate(action.route)}
+          >
+            <Text style={styles.quickActionIcon}>{action.icon}</Text>
+            <Text style={styles.quickActionText}>{action.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <View style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <View style={styles.heroBadge}>
+            <Text style={styles.heroBadgeText}>Giao hàng 30 phút</Text>
+          </View>
+          <Text style={styles.heroScore}>4.9/5</Text>
+        </View>
         <Text style={styles.kicker}>CHĂM SÓC SỨC KHỎE MỖI NGÀY</Text>
         <Text style={styles.heroTitle}>Chăm sóc đúng cách,{"\n"}an tâm mỗi ngày.</Text>
         <Text style={styles.heroText}>
@@ -170,6 +210,19 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.primaryButtonText}>Mua sắm ngay ›</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.metricRow}>
+        {[
+          { value: '1200+', label: 'Sản phẩm' },
+          { value: '30 phút', label: 'Giao hàng' },
+          { value: '99%', label: 'Hài lòng' },
+        ].map((item) => (
+          <View key={item.label} style={styles.metricCard}>
+            <Text style={styles.metricValue}>{item.value}</Text>
+            <Text style={styles.metricLabel}>{item.label}</Text>
+          </View>
+        ))}
       </View>
 
       <SectionHeader kicker="DANH MỤC SẢN PHẨM" title="Sản phẩm nổi bật" />
@@ -296,7 +349,7 @@ export default function HomeScreen({ navigation }) {
         </Text>
         <TouchableOpacity
           style={styles.linkButton}
-          onPress={() => navigation.navigate('About')}
+          onPress={() => setShowAbout(true)}
         >
           <Text style={styles.linkButtonText}>Tìm hiểu về An Tâm →</Text>
         </TouchableOpacity>
@@ -379,6 +432,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0f172a',
   },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 18,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  quickAction: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#dfeaf7',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    width: '18%',
+    minWidth: 90,
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionIcon: { fontSize: 18, marginBottom: 4 },
+  quickActionText: { color: '#0f172a', fontSize: 11, fontWeight: '700' },
   heroCard: {
     marginHorizontal: 18,
     marginTop: 16,
@@ -391,6 +468,20 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  heroBadge: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  heroBadgeText: { color: '#ecfeff', fontSize: 10, fontWeight: '700', letterSpacing: 0.4 },
+  heroScore: { color: '#ecfeff', fontSize: 12, fontWeight: '800' },
   kicker: { color: '#ccfbf1', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
   kickerLight: { color: '#ccfbf1', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
   heroTitle: {
@@ -410,6 +501,25 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   primaryButtonText: { color: '#0d9488', fontWeight: '800', fontSize: 14 },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    marginTop: 14,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#dfeaf7',
+    paddingVertical: 12,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  metricCardLast: { marginRight: 0 },
+  metricValue: { color: '#0f766e', fontSize: 18, fontWeight: '800' },
+  metricLabel: { color: '#475569', fontSize: 11, marginTop: 4 },
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

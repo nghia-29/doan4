@@ -8,13 +8,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import StoreHeader from '../components/StoreHeader';
-import { useCart } from '../context/CartContext';
+import AdminSidebar from '../components/AdminSidebar';
+import WorkspaceHeader from '../components/WorkspaceHeader';
+import { useAuth } from '../context/AuthContext';
 import { createCrudService } from '../services/crudService';
 import { formatPrice, getOrderStatusMeta } from '../data/mockData';
+import { getWorkspaceRoute, isAdminRole, isStaffRole } from '../utils/workspaceAccess';
 
 const statuses = [
   ['cho_xac_nhan', 'Chờ xác nhận'],
+  ['da_xac_nhan', 'Đã xác nhận'],
+  ['dang_chuan_bi', 'Đang chuẩn bị'],
   ['dang_giao', 'Đang giao'],
   ['hoan_thanh', 'Hoàn thành'],
   ['da_huy', 'Đã hủy'],
@@ -22,7 +26,7 @@ const statuses = [
 
 export default function AdminOrderDetailScreen({ route, navigation }) {
   const { id } = route.params;
-  const { count } = useCart();
+  const { user, ready } = useAuth();
   const orderService = createCrudService('don_dat_thuoc');
   const itemsService = createCrudService('chi_tiet_don_dat');
   const historyService = createCrudService('lich_su_theo_doi_don');
@@ -67,21 +71,24 @@ export default function AdminOrderDetailScreen({ route, navigation }) {
   };
 
   useEffect(() => {
+    if (!ready) return;
+    if (!isAdminRole(user?.vai_tro) && !isStaffRole(user?.vai_tro)) {
+      navigation.replace(getWorkspaceRoute(user?.vai_tro));
+      return;
+    }
     loadData();
-  }, [id]);
+  }, [id, navigation, ready, user?.vai_tro]);
 
   const changeStatus = async (newStatus) => {
     setUpdating(true);
     try {
-      await orderService.update(id, { ...order, trang_thai: newStatus });
-      await historyService
-        .create({
-          id_don_dat: id,
-          trang_thai_cap_nhat: newStatus,
-          ghi_chu: `Quản trị viên chuyển trạng thái sang ${newStatus}`,
-          thoi_gian_cap_nhat: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        })
-        .catch(() => {});
+      await orderService.update(id, { trang_thai: newStatus });
+      await historyService.create({
+        id_don_dat: id,
+        trang_thai_cap_nhat: newStatus,
+        ghi_chu: `Quản trị viên chuyển trạng thái sang ${newStatus}`,
+        thoi_gian_cap_nhat: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      });
       await loadData();
       Alert.alert('Thành công', 'Đã cập nhật trạng thái đơn hàng.');
     } catch (requestError) {
@@ -93,13 +100,25 @@ export default function AdminOrderDetailScreen({ route, navigation }) {
 
   const currentStatus = order?.trang_thai || 'cho_xac_nhan';
   const meta = getOrderStatusMeta(currentStatus);
+  const isAdmin = isAdminRole(user?.vai_tro);
 
   return (
     <View style={styles.container}>
-      <StoreHeader
-        cartCount={count}
-        onCartPress={() => navigation.navigate('Cart')}
-        onAccountPress={() => navigation.navigate('Login')}
+      <AdminSidebar
+        activeKey={isAdmin ? 'don_dat_thuoc' : 'orders'}
+        navigation={navigation}
+        variant={isAdmin ? 'admin' : 'staff'}
+      />
+      <View style={styles.main}>
+      <WorkspaceHeader
+        label="KHU NGHIỆP VỤ"
+        title="Xử lý đơn hàng"
+        actions={[
+          ...(isAdminRole(user?.vai_tro)
+            ? [{ label: 'Quản trị hệ thống', onPress: () => navigation.navigate('AdminDashboard') }]
+            : [{ label: 'Bàn nghiệp vụ', onPress: () => navigation.navigate('Staff') }]),
+          { label: 'Cửa hàng', onPress: () => navigation.navigate('Home') },
+        ]}
       />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -184,7 +203,7 @@ export default function AdminOrderDetailScreen({ route, navigation }) {
                       currentStatus === st && styles.actionChipActive,
                     ]}
                     onPress={() => changeStatus(st)}
-                    disabled={updating || currentStatus === st}
+                    disabled={updating || currentStatus === st || currentStatus === 'da_huy'}
                   >
                     <Text
                       style={[
@@ -236,25 +255,32 @@ export default function AdminOrderDetailScreen({ route, navigation }) {
           </>
         )}
       </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0fdfa' },
-  content: { padding: 18, paddingBottom: 40 },
-  back: { color: '#0d9488', fontWeight: '700', marginBottom: 10 },
-  kicker: { color: '#0d9488', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
-  title: { color: '#134e4a', fontSize: 26, fontWeight: '800', marginTop: 4, marginBottom: 14 },
+  container: { flex: 1, flexDirection: 'row', backgroundColor: '#f3f7f6' },
+  main: { flex: 1, minWidth: 0 },
+  content: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 48 },
+  back: { color: '#0f766e', fontWeight: '700', marginBottom: 12 },
+  kicker: { color: '#0f766e', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  title: { color: '#102a2a', fontSize: 28, fontWeight: '900', marginTop: 6, marginBottom: 18 },
   loader: { marginTop: 40 },
   error: { color: '#b91c1c' },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 18,
+    padding: 20,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e1ebe8',
     marginBottom: 18,
+    shadowColor: '#163a36',
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -272,7 +298,7 @@ const styles = StyleSheet.create({
   priceLabel: { color: '#64748b', fontSize: 13 },
   priceVal: { color: '#334155', fontWeight: '600', fontSize: 13 },
   totalLabel: { color: '#0f172a', fontWeight: '800', fontSize: 15 },
-  totalVal: { color: '#0d9488', fontWeight: '800', fontSize: 18 },
+  totalVal: { color: '#0f766e', fontWeight: '800', fontSize: 18 },
   actionPrompt: {
     color: '#0f172a',
     fontWeight: '700',
@@ -283,17 +309,17 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionChip: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 8,
+    borderColor: '#d4e1de',
+    borderRadius: 9,
     paddingHorizontal: 10,
     paddingVertical: 7,
     backgroundColor: '#fff',
   },
-  actionChipActive: { backgroundColor: '#0d9488', borderColor: '#0d9488' },
+  actionChipActive: { backgroundColor: '#0f766e', borderColor: '#0f766e' },
   actionChipText: { color: '#475569', fontSize: 12, fontWeight: '700' },
   actionChipTextActive: { color: '#fff' },
   sectionHeading: {
-    color: '#134e4a',
+    color: '#0f172a',
     fontWeight: '800',
     fontSize: 17,
     marginTop: 10,
@@ -304,17 +330,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e1ebe8',
     marginBottom: 8,
   },
   itemHeader: { flexDirection: 'row', justifyContent: 'space-between' },
   itemName: { color: '#0f172a', fontWeight: '700', fontSize: 14, flex: 1 },
-  itemTotal: { color: '#0d9488', fontWeight: '800', fontSize: 14 },
+  itemTotal: { color: '#0f766e', fontWeight: '800', fontSize: 14 },
   itemDetail: { color: '#64748b', fontSize: 12, marginTop: 4 },
   historyCard: {
     backgroundColor: '#fff',
     borderLeftWidth: 3,
-    borderLeftColor: '#0d9488',
+    borderLeftColor: '#0f9488',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,

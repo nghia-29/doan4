@@ -6,10 +6,47 @@ import { useCart } from '../context/CartContext';
 const content = {
   about: {
     kicker: 'VỀ NHÀ THUỐC AN TÂM',
-    title: 'Một địa chỉ đáng tin cho cả gia đình.',
-    text: 'An Tâm được xây dựng với mong muốn đưa trải nghiệm mua thuốc trở nên rõ ràng, thuận tiện và an toàn hơn. Chúng tôi chọn sản phẩm có nguồn gốc minh bạch và luôn đặt tư vấn đúng cách lên hàng đầu.',
-    heading: 'Nhà thuốc bắt đầu từ một điều giản dị: giúp mọi người hiểu đúng về thuốc.',
-    detail: 'Chúng tôi tin rằng mua thuốc không chỉ là chọn một sản phẩm trên kệ. Đó còn là việc được lắng nghe, được hướng dẫn rõ ràng và được nhắc nhở về những điều cần lưu ý khi dùng thuốc.',
+    title: 'Chăm sóc sức khỏe bằng sự tận tâm và thấu hiểu.',
+    text: 'Nhà Thuốc An Tâm hướng đến trải nghiệm chăm sóc sức khỏe gần gũi, rõ ràng và thuận tiện. Từ lúc tìm hiểu sản phẩm đến khi cần hỏi về cách sử dụng, chúng tôi mong mỗi khách hàng đều nhận được thông tin dễ hiểu và sự hỗ trợ chu đáo.',
+    sections: [
+      {
+        heading: 'Câu chuyện của An Tâm',
+        detail: 'Tên gọi An Tâm thể hiện điều chúng tôi muốn mang đến trong mỗi lần khách ghé thăm: cảm giác được lắng nghe, được giải thích cặn kẽ và được hướng dẫn lựa chọn phù hợp. Chúng tôi xây dựng cửa hàng trực tuyến để khách hàng có thể tìm kiếm sản phẩm, xem thông tin và đặt hàng thuận tiện hơn.',
+      },
+      {
+        heading: 'Sứ mệnh của chúng tôi',
+        detail: 'Giúp khách hàng tiếp cận sản phẩm chăm sóc sức khỏe một cách thuận tiện, đồng thời khuyến khích việc sử dụng thuốc có trách nhiệm. An Tâm coi trọng thông tin sản phẩm rõ ràng, tư vấn đúng phạm vi chuyên môn và sự tôn trọng đối với nhu cầu riêng của từng người.',
+      },
+      {
+        heading: 'Những điều An Tâm luôn coi trọng',
+        detail: 'Tận tâm trong giao tiếp; minh bạch về thông tin và giá bán; cẩn trọng khi tiếp nhận đơn thuốc; bảo quản, kiểm tra sản phẩm theo quy trình; và bảo vệ thông tin cá nhân của khách hàng trong quá trình hỗ trợ.',
+      },
+      {
+        heading: 'Đồng hành từ lúc tìm hiểu đến sau khi mua',
+        detail: 'Khách hàng có thể tìm sản phẩm theo tên hoặc danh mục, xem thông tin cơ bản trước khi đặt hàng và liên hệ nhà thuốc khi cần hỗ trợ. Với sản phẩm kê đơn, đơn thuốc cần được tiếp nhận và thẩm định theo quy trình trước khi xử lý. Sau khi mua, khách có thể theo dõi tình trạng đơn hàng và liên hệ khi cần giải đáp.',
+      },
+      {
+        heading: 'Sử dụng thuốc an toàn là ưu tiên chung',
+        detail: 'Thông tin trên trang giúp khách tham khảo, không thay thế việc khám bệnh hoặc chỉ định của bác sĩ. Hãy dùng thuốc theo hướng dẫn của nhân viên y tế, đọc kỹ thông tin sản phẩm và hỏi dược sĩ khi chưa rõ về liều dùng, tương tác hoặc tác dụng không mong muốn. Không tự ý dùng thuốc kê đơn khi chưa có chỉ định phù hợp.',
+      },
+    ],
+    principles: [
+      {
+        icon: '♡',
+        title: 'Lắng nghe',
+        detail: 'Tìm hiểu nhu cầu trước khi hướng dẫn.',
+      },
+      {
+        icon: '✓',
+        title: 'Rõ ràng',
+        detail: 'Thông tin dễ hiểu, hỗ trợ có trách nhiệm.',
+      },
+      {
+        icon: '✚',
+        title: 'An toàn',
+        detail: 'Đặt việc dùng thuốc đúng cách lên hàng đầu.',
+      },
+    ],
   },
   quality: {
     kicker: 'CAM KẾT CHẤT LƯỢNG',
@@ -27,9 +64,10 @@ const content = {
   },
 };
 
-export default function InfoScreen({ route, navigation }) {
+export default function InfoScreen({ route, navigation, onClose }) {
   const { count } = useCart();
-  const page = content[route.params?.type || 'about'];
+  const page = content[route.params?.type || 'about'] || content.about;
+  const isAboutPage = (route.params?.type || 'about') === 'about';
 
   return (
     <ScrollView style={styles.container}>
@@ -40,13 +78,38 @@ export default function InfoScreen({ route, navigation }) {
       />
 
       <View style={styles.content}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity onPress={onClose || (() => navigation.navigate('Home'))}>
           <Text style={styles.back}>‹ Về trang chủ</Text>
         </TouchableOpacity>
 
         <Text style={styles.kicker}>{page.kicker}</Text>
         <Text style={styles.title}>{page.title}</Text>
         <Text style={styles.lead}>{page.text}</Text>
+
+        {isAboutPage && (
+          <>
+            <View style={styles.principles}>
+              {page.principles.map((principle) => (
+                <View key={principle.title} style={styles.principleCard}>
+                  <Text style={styles.principleIcon}>{principle.icon}</Text>
+                  <Text style={styles.principleTitle}>{principle.title}</Text>
+                  <Text style={styles.principleDetail}>{principle.detail}</Text>
+                </View>
+              ))}
+            </View>
+            {page.sections.map((section, index) => (
+              <View key={section.heading} style={styles.storySection}>
+                <View style={styles.storyNumber}>
+                  <Text style={styles.storyNumberText}>{String(index + 1).padStart(2, '0')}</Text>
+                </View>
+                <View style={styles.storyCopy}>
+                  <Text style={styles.heading}>{section.heading}</Text>
+                  <Text style={styles.detail}>{section.detail}</Text>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
 
         {route.params?.type === 'contact' && (
           <View style={styles.contact}>
@@ -58,17 +121,29 @@ export default function InfoScreen({ route, navigation }) {
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.heading}>{page.heading}</Text>
-          <Text style={styles.detail}>{page.detail}</Text>
-        </View>
+        {!isAboutPage && (
+          <View style={styles.section}>
+            <Text style={styles.heading}>{page.heading}</Text>
+            <Text style={styles.detail}>{page.detail}</Text>
+          </View>
+        )}
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate(isAboutPage ? 'Products' : 'Home')}
         >
-          <Text style={styles.buttonText}>Xem danh mục thuốc ›</Text>
+          <Text style={styles.buttonText}>
+            {isAboutPage ? 'Khám phá danh mục thuốc ›' : 'Về trang chủ ›'}
+          </Text>
         </TouchableOpacity>
+        {isAboutPage && (
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate('Contact')}
+          >
+            <Text style={styles.secondaryButtonText}>Liên hệ với An Tâm</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -81,6 +156,58 @@ const styles = StyleSheet.create({
   kicker: { color: '#0d9488', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   title: { color: '#134e4a', fontSize: 26, fontWeight: '800', lineHeight: 34, marginTop: 6 },
   lead: { color: '#475569', fontSize: 14, lineHeight: 22, marginTop: 12 },
+  principles: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 20,
+  },
+  principleCard: {
+    flex: 1,
+    minWidth: 150,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#d1fae5',
+  },
+  principleIcon: {
+    color: '#0d9488',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  principleTitle: {
+    color: '#134e4a',
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  principleDetail: {
+    color: '#64748b',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  storySection: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  storyNumber: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#ccfbf1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  storyNumberText: { color: '#0f766e', fontSize: 12, fontWeight: '900' },
+  storyCopy: { flex: 1 },
   contact: {
     backgroundColor: '#fff',
     borderRadius: 16,

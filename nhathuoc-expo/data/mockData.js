@@ -1,29 +1,27 @@
 export const initialData = {
   vai_tro: [
     { id: 1, ten_vai_tro: 'khach_hang' },
-    { id: 2, ten_vai_tro: 'bac_si' },
-    { id: 3, ten_vai_tro: 'nv_quan_ly' },
-    { id: 4, ten_vai_tro: 'duoc_si' },
-    { id: 5, ten_vai_tro: 'admin' },
+    { id: 2, ten_vai_tro: 'nv_quan_ly' },
+    { id: 3, ten_vai_tro: 'duoc_si' },
+    { id: 4, ten_vai_tro: 'admin' },
   ],
   tai_khoan: [
     { id: 1, ten_dang_nhap: 'khachhang1', mat_khau: '123456', id_vai_tro: 1, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
-    { id: 2, ten_dang_nhap: 'bacsi1', mat_khau: '123456', id_vai_tro: 2, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
-    { id: 3, ten_dang_nhap: 'nhanvien1', mat_khau: '123456', id_vai_tro: 3, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
-    { id: 4, ten_dang_nhap: 'duocsi1', mat_khau: '123456', id_vai_tro: 4, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
-    { id: 5, ten_dang_nhap: 'admin1', mat_khau: '123456', id_vai_tro: 5, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
+    { id: 2, ten_dang_nhap: 'nhanvien1', mat_khau: '123456', id_vai_tro: 2, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
+    { id: 3, ten_dang_nhap: 'duocsi1', mat_khau: '123456', id_vai_tro: 3, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
+    { id: 4, ten_dang_nhap: 'admin1', mat_khau: '123456', id_vai_tro: 4, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
+    { id: 5, ten_dang_nhap: 'khachhang2', mat_khau: '123456', id_vai_tro: 1, trang_thai: 1, ngay_tao: '2026-09-20 08:00:00' },
   ],
   khach_hang: [
     { id: 1, id_tai_khoan: 1, ho_ten: 'Nguyễn Văn Khách', so_dien_thoai: '0901234567', email: 'khachhang1@gmail.com', dia_chi: '123 Lê Lợi, Quận 1, TP.HCM', ngay_sinh: '1995-05-15' },
     { id: 2, id_tai_khoan: 5, ho_ten: 'Trần Thị Mai', so_dien_thoai: '0987654321', email: 'mai.tran@gmail.com', dia_chi: '456 Hai Bà Trưng, Quận 3, TP.HCM', ngay_sinh: '1992-08-20' },
   ],
   bac_si: [
-    { id: 1, id_tai_khoan: 2, ho_ten: 'Trần Thị Bác Sĩ', chuyen_khoa: 'Nội tổng hợp', so_dien_thoai: '0912345678', so_chung_chi_hanh_nghe: 'CCHN-00981' },
-    { id: 2, id_tai_khoan: 2, ho_ten: 'Vũ Minh Quân', chuyen_khoa: 'Tai Mũi Họng', so_dien_thoai: '0918889999', so_chung_chi_hanh_nghe: 'CCHN-01452' },
+    { id: 2, id_tai_khoan: 3, ho_ten: 'Phạm Thị Dược Sĩ', chuyen_khoa: 'Dược lâm sàng', so_dien_thoai: '0934567890', so_chung_chi_hanh_nghe: 'CCHN-01452', email: 'duocsi1@nhathuoc.com' },
   ],
   nhan_vien: [
-    { id: 1, id_tai_khoan: 3, ho_ten: 'Lê Quản Lý', so_dien_thoai: '0923456789', email: 'quanly1@nhathuoc.com' },
-    { id: 2, id_tai_khoan: 4, ho_ten: 'Phạm Thị Dược Sĩ', so_dien_thoai: '0934567890', email: 'duocsi1@nhathuoc.com' },
+    { id: 1, id_tai_khoan: 2, ho_ten: 'Lê Quản Lý', so_dien_thoai: '0923456789', email: 'quanly1@nhathuoc.com' },
+    { id: 2, id_tai_khoan: 3, ho_ten: 'Phạm Thị Dược Sĩ', so_dien_thoai: '0934567890', email: 'duocsi1@nhathuoc.com', chuyen_khoa: 'Dược lâm sàng', so_chung_chi_hanh_nghe: 'CCHN-01452' },
   ],
   nha_cung_cap: [
     { id: 1, ten_nha_cung_cap: 'Công ty Dược Hậu Giang', ma_so_thue: '1800156801', so_dien_thoai: '02923891433', email: 'dhg@dhgpharma.com.vn', dia_chi: '288 Bis Nguyễn Văn Cừ, Cần Thơ', nguoi_lien_he: 'Nguyễn Văn A', trang_thai: 1 },
@@ -36,6 +34,20 @@ export const initialData = {
     { id: 3, ten_danh_muc: 'Thực phẩm chức năng', mo_ta: 'Hỗ trợ bồi bổ sức khỏe, tăng sức đề kháng' },
     { id: 4, ten_danh_muc: 'Thuốc tiêu hóa', mo_ta: 'Hỗ trợ điều trị tiêu chảy, rối loạn tiêu hóa và men vi sinh' },
     { id: 5, ten_danh_muc: 'Vitamin & Khoáng chất', mo_ta: 'Bổ sung vi chất thiết yếu cho cơ thể mỗi ngày' },
+  ],
+  benh: [
+    { id: 1, ma_icd: 'J02', ten_benh: 'Viêm họng cấp', mo_ta: 'Viêm họng do vi khuẩn/virus' },
+    { id: 2, ma_icd: 'J22', ten_benh: 'Nhiễm khuẩn đường hô hấp dưới', mo_ta: 'Viêm phế quản, viêm phổi nhẹ' },
+    { id: 3, ma_icd: 'K21', ten_benh: 'Trào ngược dạ dày - thực quản', mo_ta: 'Kèm viêm loét dạ dày' },
+    { id: 4, ma_icd: 'I10', ten_benh: 'Tăng huyết áp', mo_ta: 'Tăng huyết áp nguyên phát' },
+    { id: 5, ma_icd: 'E11', ten_benh: 'Đái tháo đường type 2', mo_ta: 'Đái tháo đường không phụ thuộc insulin' },
+  ],
+  phac_do: [
+    { id: 1, id_benh: 1, ten_phac_do: 'Phác đồ viêm họng cấp do vi khuẩn', mo_ta: 'Kháng sinh + hạ sốt giảm đau', trang_thai: 1 },
+  ],
+  chi_tiet_phac_do: [
+    { id_phac_do: 1, id_thuoc: 2, so_luong_goi_y: 1, lieu_dung: 'Ngày uống 3 lần, mỗi lần 1 viên sau ăn', so_ngay_dung: 7 },
+    { id_phac_do: 1, id_thuoc: 1, so_luong_goi_y: 1, lieu_dung: 'Uống 1 viên khi sốt hoặc đau, cách nhau 4-6 giờ', so_ngay_dung: 3 },
   ],
   thuoc: [
     { id: 1, ma_sku: 'SKU001', ten_thuoc: 'Paracetamol 500mg', id_danh_muc: 1, id_nha_cung_cap: 1, loai_ke_don: 'khong_ke_don', so_dang_ky: 'VD-54321-18', don_vi_tinh: 'Hộp', gia_ban: 35000, so_luong_ton: 150, han_su_dung: '2026-12-31', trang_thai: 1 },
@@ -120,9 +132,10 @@ export const initialData = {
     { id: 2, ma_code: 'GIAM20K', mo_ta: 'Giảm ngay 20.000đ cho đơn từ 100.000đ', loai_giam: 'so_tien', gia_tri_giam: 20000, don_toi_thieu: 100000, ngay_bat_dau: '2026-01-01', ngay_ket_thuc: '2026-12-31', so_luong_toi_da: 500 },
   ],
   don_thuoc: [
-    { id: 1, id_khach_hang: 1, id_bac_si: 1, ngay_ke_don: '2026-09-20', trang_thai: 'da_duyet', id_nhan_vien_duyet: 2, ngay_duyet: '2026-09-21 09:30:00', ghi_chu_duyet: 'Toa hợp lệ, đã đối chiếu với bác sĩ kê' },
-    { id: 2, id_khach_hang: 2, id_bac_si: 2, ngay_ke_don: '2026-09-28', trang_thai: 'cho_duyet', id_nhan_vien_duyet: null, ngay_duyet: null, ghi_chu_duyet: null },
+    { id: 1, id_khach_hang: 1, id_nhan_vien_ke_don: 2, hinh_anh_don_thuoc: null, ngay_ke_don: '2026-09-20', so_ngay_hieu_luc: 5, trang_thai: 'da_duyet', id_nhan_vien_duyet: 1, ngay_duyet: '2026-09-21 09:30:00', ghi_chu_duyet: 'Toa hợp lệ, đã đối chiếu với dược sĩ kê đơn' },
+    { id: 2, id_khach_hang: 2, id_nhan_vien_ke_don: null, hinh_anh_don_thuoc: 'toa-02.jpg', ngay_ke_don: '2026-09-28', so_ngay_hieu_luc: 5, trang_thai: 'cho_duyet', id_nhan_vien_duyet: null, ngay_duyet: null, ghi_chu_duyet: null },
   ],
+  yeu_cau_ke_don: [],
   chi_tiet_don_thuoc: [
     { id: 1, id_don_thuoc: 1, id_thuoc: 2, so_luong_ke: 1, lieu_dung: 'Ngày uống 3 lần, mỗi lần 1 viên sau ăn', so_ngay_dung: 7 },
     { id: 2, id_don_thuoc: 2, id_thuoc: 2, so_luong_ke: 2, lieu_dung: 'Ngày uống 2 lần, mỗi lần 1 viên', so_ngay_dung: 10 },
@@ -212,6 +225,10 @@ export const getOrderStatusMeta = (status) => {
   switch (status) {
     case 'cho_xac_nhan':
       return { label: 'Chờ xác nhận', color: '#eab308', bg: '#fef9c3' };
+    case 'da_xac_nhan':
+      return { label: 'Đã xác nhận', color: '#0f766e', bg: '#ccfbf1' };
+    case 'dang_chuan_bi':
+      return { label: 'Đang chuẩn bị', color: '#7c3aed', bg: '#ede9fe' };
     case 'dang_giao':
       return { label: 'Đang giao', color: '#0284c7', bg: '#e0f2fe' };
     case 'hoan_thanh':
